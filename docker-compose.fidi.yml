@@ -1,0 +1,9 @@
+version: '3.3'
+
+services:
+  fidi:
+    image: fireflyiii/data-importer:latest
+    restart: always
+    env_file: .fidi.env
+    ports:
+      - 8081:8080
