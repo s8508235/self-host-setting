@@ -43,7 +43,9 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - firefly_iii_db:/var/lib/postgresql/data/pgdata
-
+  cron:
+    image: alpine
+    command: sh -c "echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/[TOKEN]\" | crontab - && crond -f -L /dev/stdout"
 volumes:
    firefly_iii_upload:
    firefly_iii_db:
