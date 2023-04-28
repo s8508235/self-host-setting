@@ -9,7 +9,11 @@ services:
       - 8080:8080
     depends_on:
       - app
+      - memos
     restart: always
+    networks:
+      - default-network
+      - internal-network
     logging:
       driver: "json-file"
       options:
@@ -23,6 +27,8 @@ services:
     env_file: .env
     expose:
       - 8080
+    networks:
+      - internal-network
     # ports:
     #  - 8080:8080
     depends_on:
@@ -36,6 +42,8 @@ services:
     image: postgres  
     hostname: fireflyiiidb
     restart: always
+    networks:
+      - internal-network
     environment:
       - POSTGRES_USER=firefly
       - POSTGRES_PASSWORD={PASSWD}
@@ -43,9 +51,25 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - firefly_iii_db:/var/lib/postgresql/data/pgdata
+  memos:
+    image: neosmemo/memos:latest
+    container_name: memos
+    networks:
+      - internal-network
+    volumes:
+      - ~/.memos/:/var/opt/memos
+    expose:
+      - 5230
   cron:
     image: alpine
     command: sh -c "echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/[TOKEN]\" | crontab - && crond -f -L /dev/stdout"
 volumes:
    firefly_iii_upload:
    firefly_iii_db:
+
+networks:
+  internal-network:
+    internal: true
+  default-network:
+    external: true
+    name: external-network
