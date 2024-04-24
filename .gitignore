@@ -3,3 +3,4 @@ docker-compose.yml
 .fidi.env
 *.sql
 memos/
+.paperless.env

@@ -7,6 +7,8 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - 8080:8080
+      - 8081:8081
+      - 8084:8084
     depends_on:
       - app
       - memos
@@ -63,9 +65,72 @@ services:
   cron:
     image: alpine
     command: sh -c "echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/[TOKEN]\" | crontab - && crond -f -L /dev/stdout"
+
+  migrations:
+    image: migrate/migrate:v4.17.0
+    networks:
+      - internal-network
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [
+        "-path",
+        "/migrations/",
+        "-database",
+        "postgres://${DB_USERNAME}:${DB_PASSWORD}@db:5432/${DB_USERNAME}?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      - db
+  
+  gatus:
+    image: twinproduction/gatus:v5.10.0
+    restart: always
+    ports:
+      - "8083:8080"
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_USERNAME}
+    volumes:
+      - ./gatus-config:/config
+    networks:
+      - default-network
+      - internal-network
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+  
+  paperless-broker:
+    env_file: .paperless.env
+    image: docker.io/library/redis:7
+    restart: unless-stopped
+    networks:
+      - internal-network
+    volumes:
+      - redis_data:/data
+
+  paperless-webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.7
+    restart: unless-stopped
+    depends_on:
+      - db
+      - paperless-broker
+    networks:
+      - internal-network
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - ./export:/usr/src/paperless/export
+      - ./consume:/usr/src/paperless/consume
+    env_file: .paperless.example.env
+
 volumes:
-   firefly_iii_upload:
-   firefly_iii_db:
+  firefly_iii_upload:
+  firefly_iii_db:
+  redis_data:
+  paperless_data:
+  paperless_media:
 
 networks:
   internal-network:

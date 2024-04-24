@@ -1,0 +1,31 @@
+storage:
+  type: postgres
+  path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
+
+endpoints:
+  - name: firefly-iii
+    group: internal
+    url: "http://app:8080"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: memos
+    group: internal
+    url: "http://memos:5230"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: icmp-ping
+    url: "icmp://1.1.1.1"
+    interval: 1h
+    conditions:
+      - "[CONNECTED] == true"
+   
+  - name: paperless
+    group: internal
+    url: "http://paperless-webserver:8000"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
