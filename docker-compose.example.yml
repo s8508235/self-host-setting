@@ -9,6 +9,7 @@ services:
       - 8080:8080
       - 8081:8081
       - 8084:8084
+      - 8085:8085
     depends_on:
       - app
       - memos
@@ -124,7 +125,13 @@ services:
       - ./export:/usr/src/paperless/export
       - ./consume:/usr/src/paperless/consume
     env_file: .paperless.example.env
-
+  it-tools:
+    image: ghcr.io/corentinth/it-tools:2023.12.21-5ed3693
+    restart: unless-stopped
+    networks:
+      - internal-network
+    ports:
+      - 8085:80
 volumes:
   firefly_iii_upload:
   firefly_iii_db:

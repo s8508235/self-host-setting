@@ -29,3 +29,11 @@ endpoints:
     interval: 5m
     conditions:
       - "[STATUS] == 200"
+
+  - name: it-tools
+    group: internal
+    url: "http://it-tools:80"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
